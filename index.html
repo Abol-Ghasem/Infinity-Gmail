@@ -1,0 +1,236 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gmail Email Variants Generator</title>
+    <style>
+        body {
+            font-family: 'Arial', sans-serif;
+            background-color: #181818;
+            color: #fff;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            overflow: hidden;
+        }
+
+        .container {
+            background-color: #222;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
+            padding: 20px;
+            border-radius: 10px;
+            width: 100%;
+            max-width: 600px;
+            overflow: auto;
+            height: 90%;
+        }
+
+        h1 {
+            text-align: center;
+            color: #fff;
+            margin-bottom: 20px;
+        }
+
+        form {
+            display: flex;
+            flex-direction: column;
+        }
+
+        label {
+            margin-bottom: 5px;
+            font-weight: bold;
+            color: #ccc;
+        }
+
+        input {
+            padding: 10px;
+            margin-bottom: 20px;
+            border: 1px solid #444;
+            border-radius: 5px;
+            background-color: #333;
+            color: #fff;
+            font-size: 16px;
+        }
+
+        button {
+            padding: 10px;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+            transition: background-color 0.3s ease;
+        }
+
+        button:hover {
+            background-color: #45a049;
+        }
+
+        h2 {
+            text-align: center;
+            color: #fff;
+        }
+
+        ul {
+            list-style-type: none;
+            padding: 0;
+            max-height: 300px;
+            overflow-y: auto;
+        }
+
+        li {
+            background-color: #333;
+            border: 1px solid #444;
+            border-radius: 5px;
+            padding: 10px;
+            margin-bottom: 10px;
+            font-size: 16px;
+            word-break: break-word;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .error {
+            color: red;
+            font-weight: bold;
+            text-align: center;
+        }
+
+        .loading {
+            color: #4CAF50;
+            font-weight: bold;
+            text-align: center;
+        }
+
+        .copy-btn {
+            background-color: #007bff;
+            padding: 5px 10px;
+            border-radius: 5px;
+            color: white;
+            font-size: 14px;
+            cursor: pointer;
+            border: none;
+        }
+
+        .copy-btn:hover {
+            background-color: #0056b3;
+        }
+
+        .copy-all-btn {
+            background-color: #28a745;
+            margin-top: 20px;
+            width: 100%;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Gmail Email Variants Generator</h1>
+        <form id="emailForm">
+            <label for="email">Enter your email:</label>
+            <input type="email" id="email" name="email" required placeholder="example@gmail.com">
+            
+            <label for="count">Enter number of variants:</label>
+            <input type="number" id="count" name="count" required placeholder="e.g., 5">
+            
+            <button type="submit">Generate</button>
+        </form>
+
+        <h2>Generated Variants:</h2>
+        <ul id="generatedEmailsList"></ul>
+        <p id="errorMessage" class="error"></p>
+        <p id="loadingMessage" class="loading" style="display:none;">Generating variants...</p>
+        <button id="copyAllBtn" class="copy-btn copy-all-btn" style="display:none;">Copy All</button>
+    </div>
+
+    <script>
+        function validateEmail(email) {
+            const pattern = /^[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\.[a-zA-Z0-9-.]+$/;
+            return pattern.test(email);
+        }
+
+        function generateRandomString(length = 5) {
+            const chars = 'abcdefghijklmnopqrstuvwxyz';
+            let randomStr = '';
+            for (let i = 0; i < length; i++) {
+                const randomIndex = Math.floor(Math.random() * chars.length);
+                randomStr += chars[randomIndex];
+            }
+            return randomStr;
+        }
+
+        function generateGmailVariations(email, count) {
+            if (!validateEmail(email)) {
+                return { error: 'The entered email is invalid.' };
+            }
+
+            const [localPart, domain] = email.split('@');
+            if (domain !== 'gmail.com') {
+                return { error: 'This tool only works for Gmail addresses.' };
+            }
+
+            let variations = [];
+            for (let i = 0; i < count; i++) {
+                const randomPart = generateRandomString();
+                variations.push(`${localPart}+${randomPart}${i}@${domain}`);
+            }
+
+            return { emails: variations };
+        }
+
+        document.getElementById('emailForm').addEventListener('submit', function (event) {
+            event.preventDefault();
+
+            document.getElementById('loadingMessage').style.display = 'block';
+            document.getElementById('generatedEmailsList').innerHTML = '';
+            document.getElementById('errorMessage').innerHTML = '';
+
+            const email = document.getElementById('email').value;
+            const count = parseInt(document.getElementById('count').value);
+
+            setTimeout(function () {
+                const result = generateGmailVariations(email, count);
+
+                document.getElementById('loadingMessage').style.display = 'none';
+
+                const list = document.getElementById('generatedEmailsList');
+                if (result.emails && result.emails.length > 0) {
+                    result.emails.forEach(function (email) {
+                        const listItem = document.createElement('li');
+                        listItem.textContent = email;
+
+                        const copyBtn = document.createElement('button');
+                        copyBtn.textContent = 'Copy';
+                        copyBtn.classList.add('copy-btn');
+                        copyBtn.onclick = function () {
+                            navigator.clipboard.writeText(email);
+                        };
+
+                        listItem.appendChild(copyBtn);
+                        list.appendChild(listItem);
+                    });
+
+                    document.getElementById('copyAllBtn').style.display = 'block';
+                } else {
+                    document.getElementById('errorMessage').textContent = result.error;
+                }
+            }, 500);
+        });
+
+        document.getElementById('copyAllBtn').addEventListener('click', function () {
+            const emails = document.querySelectorAll('#generatedEmailsList li');
+            let allEmails = '';
+            emails.forEach((emailItem) => {
+                allEmails += emailItem.textContent.replace('Copy', '') + '\n';
+            });
+            navigator.clipboard.writeText(allEmails.trim());
+        });
+    </script>
+</body>
+</html>
